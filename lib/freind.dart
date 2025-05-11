@@ -1,6 +1,6 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:xo_game/game_dialogs.dart';
 
 class Freind extends StatefulWidget {
   const Freind({super.key});
@@ -13,6 +13,21 @@ class _FreindState extends State<Freind> {
   List sq = ["", "", "", "", "", "", "", "", ""];
   String frist = "X", winnerPlayer = "";
   int xScore = 0, oScore = 0, drawScore = 0;
+
+  final TextStyle titleStyle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+    fontFamily: 'second_font',
+  );
+
+  final TextStyle contentStyle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+    fontFamily: 'frist_font',
+  );
+
   clearBoard() {
     setState(() {
       sq = ["", "", "", "", "", "", "", "", ""];
@@ -30,14 +45,9 @@ class _FreindState extends State<Freind> {
 
   getWinner() {
     List winning = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
+      [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+      [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+      [0, 4, 8], [2, 4, 6], // diagonals
     ];
     for (var i = 0; i < winning.length; i++) {
       String a = sq[winning[i][0]];
@@ -51,6 +61,103 @@ class _FreindState extends State<Freind> {
       return "Draw";
     }
     return "";
+  }
+
+  void handleWinner(String winner) {
+    startTimer();
+
+    String title, content;
+
+    if (winner == 'X') {
+      frist = "X";
+      xScore++;
+      title = 'Winner';
+      content = 'X is the winner!';
+    } else if (winner == 'O') {
+      frist = "O";
+      oScore++;
+      title = 'Winner';
+      content = 'O is the winner!';
+    } else {
+      // Draw
+      drawScore++;
+      title = 'Draw';
+      content = 'It\'s a draw!';
+    }
+
+    showResultDialog(title, content);
+  }
+
+  void showResultDialog(String title, String content) {
+    GameDialogs.showResultDialog(
+      context: context,
+      title: title,
+      content: content,
+      titleStyle: titleStyle,
+      contentStyle: contentStyle,
+    );
+  }
+
+  Widget buildScoreContainer(String player, int score, bool isActive) {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.33,
+      height: MediaQuery.of(context).size.height * 0.22,
+      decoration: BoxDecoration(
+        color: isActive ? Colors.purpleAccent : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Text(
+            player,
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontFamily: 'frist_font',
+            ),
+          ),
+          SizedBox(height: 10),
+          Text(
+            'Score:',
+            style: TextStyle(
+              fontSize: MediaQuery.of(context).size.width * 0.05,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontFamily: 'frist_font',
+            ),
+          ),
+          SizedBox(height: 10),
+          Text(
+            '$score',
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontFamily: 'second_font',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void handleTileTap(int index) {
+    if (sq[index] == "") {
+      setState(() {
+        sq[index] = frist;
+        winnerPlayer = getWinner();
+
+        if (winnerPlayer == 'X' ||
+            winnerPlayer == 'O' ||
+            winnerPlayer == 'Draw') {
+          handleWinner(winnerPlayer);
+        } else {
+          // Switch player
+          frist = (frist == 'X') ? 'O' : 'X';
+        }
+      });
+    }
   }
 
   @override
@@ -68,9 +175,7 @@ class _FreindState extends State<Freind> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.pop(context),
                   icon: Icon(
                     Icons.arrow_back_ios,
                     color: Colors.white,
@@ -110,47 +215,7 @@ class _FreindState extends State<Freind> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: MediaQuery.of(context).size.width * 0.33,
-                  height: MediaQuery.of(context).size.height * 0.22,
-                  decoration: BoxDecoration(
-                    color: frist == 'X' ? Colors.purpleAccent : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        'X',
-                        style: TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          fontFamily: 'frist_font',
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Score:',
-                        style: TextStyle(
-                          fontSize: MediaQuery.of(context).size.width * 0.05,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          fontFamily: 'frist_font',
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        '$xScore',
-                        style: TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          fontFamily: 'second_font',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                buildScoreContainer('X', xScore, frist == 'X'),
                 SizedBox(width: 10),
                 Container(
                   width: 110,
@@ -172,47 +237,7 @@ class _FreindState extends State<Freind> {
                   ),
                 ),
                 SizedBox(width: 10),
-                Container(
-                  width: MediaQuery.of(context).size.width * 0.33,
-                  height: MediaQuery.of(context).size.height * 0.22,
-                  decoration: BoxDecoration(
-                    color: frist == 'O' ? Colors.purpleAccent : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        'O',
-                        style: TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          fontFamily: 'frist_font',
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Score:',
-                        style: TextStyle(
-                          fontSize: MediaQuery.of(context).size.width * 0.05,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          fontFamily: 'frist_font',
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        '$oScore',
-                        style: TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          fontFamily: 'second_font',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                buildScoreContainer('O', oScore, frist == 'O'),
               ],
             ),
             SizedBox(height: MediaQuery.of(context).size.height * 0.01),
@@ -225,7 +250,6 @@ class _FreindState extends State<Freind> {
                 fontFamily: 'second_font',
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: SizedBox(
@@ -240,289 +264,7 @@ class _FreindState extends State<Freind> {
                   ),
                   itemBuilder: (context, index) {
                     return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          if (sq[index] == "") {
-                            if (frist == "X") {
-                              sq[index] = "X";
-                              winnerPlayer = getWinner();
-                              if (winnerPlayer == 'X') {
-                                startTimer();
-                                frist = "X";
-
-                                xScore++;
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text(
-                                        'Winner',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'second_font',
-                                        ),
-                                      ),
-                                      content: Text(
-                                        'X is the winner!',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'frist_font',
-                                        ),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: Text('OK',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black,
-                                              fontFamily: 'frist_font',
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              } else if (winnerPlayer == 'O') {
-                                startTimer();
-                                frist = "O";
-                                oScore++;
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text(
-                                        'Winner',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'second_font',
-                                        ),
-                                      ),
-                                      content: Text(
-                                        'O is the winner!',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'frist_font',
-                                        ),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: Text('OK',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black,
-                                              fontFamily: 'frist_font',
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              } else if (winnerPlayer == 'Draw') {
-                                startTimer();
-                                drawScore++;
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text(
-                                        'Draw',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'second_font',
-                                        ),
-                                      ),
-                                      content: Text(
-                                        'It\'s a draw!',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'frist_font',
-                                        ),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: Text('OK',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black,
-                                              fontFamily: 'frist_font',
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              } else {
-                                frist = 'O';
-                              }
-                            } else {
-                              sq[index] = "O";
-                              winnerPlayer = getWinner();
-                              if (winnerPlayer == 'X') {
-                                startTimer();
-                                frist = "X";
-
-                                xScore++;
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text(
-                                        'Winner',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'second_font',
-                                        ),
-                                      ),
-                                      content: Text(
-                                        'X is the winner!',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'frist_font',
-                                        ),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: Text('OK',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black,
-                                              fontFamily: 'frist_font',
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              } else if (winnerPlayer == 'O') {
-                                startTimer();
-                                frist = "O";
-                                oScore++;
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text(
-                                        'Winner',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'second_font',
-                                        ),
-                                      ),
-                                      content: Text(
-                                        'O is the winner!',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'frist_font',
-                                        ),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: Text('OK',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black,
-                                              fontFamily: 'frist_font',
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              } else if (winnerPlayer == 'Draw') {
-                                startTimer();
-                                drawScore++;
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text(
-                                        'Draw',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'second_font',
-                                        ),
-                                      ),
-                                      content: Text(
-                                        'It\'s a draw!',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontFamily: 'frist_font',
-                                        ),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: Text('OK',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black,
-                                              fontFamily: 'frist_font',
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              } else {
-                                frist = 'X';
-                              }
-                            }
-                          }
-                        });
-                      },
+                      onTap: () => handleTileTap(index),
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20),
